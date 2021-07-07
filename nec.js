@@ -1,11 +1,10 @@
 #!/usr/bin/env node
 const { program } = require("commander");
-const { Octokit } = require("@octokit/rest");
 const fs = require("fs-extra");
 const path = require("path");
 const axios = require("axios");
 const extract = require("extract-zip");
-const octokit = new Octokit();
+const chalk = require('chalk');
 
 const unpackRelease = async () => {
     try {
@@ -28,7 +27,7 @@ const moveEachFileAndFolder = () => {
             var targetPath = path.resolve("./" + file);
             fs.moveSync(path.resolve("./extract/" + rootFolder + "/" + file), targetPath);
         } catch (e) {
-          console.log(e);
+            console.log(e);
         }
     }
     fs.removeSync("./extract/" + rootFolder);
@@ -55,4 +54,17 @@ program
             });
     });
 program.command("unpack").description("Unpacks lastest download of N&CFramework.").action(unpackRelease);
+program
+    .command("list  <password>")
+    .description("Lists available versions of N&CFramework.")
+    .action((password) => {
+        axios
+            .post("http://swfacil.servicos.ws/framework/list", {
+                password,
+            })
+            .then(function (response) {
+                console.log("Available "+chalk.yellow("versions")+"\n"+response.data.join("\n"));
+                // response.data.pipe(fs.createWriteStream("./release.zip"));
+            });
+    });
 program.parse(process.argv);
